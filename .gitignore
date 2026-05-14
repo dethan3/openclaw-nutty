@@ -1,0 +1,37 @@
+# Ignore OpenClaw runtime files
+*.log
+*.tmp
+*.cache
+
+# Ignore sensitive information
+config*.json
+*.secret
+*.key
+*.env
+.env.local
+.env.*.local
+
+# Ignore backup files
+*-backup
+backup-*
+*.bak
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore temporary files
+*~
+*.tmp
+
+# Ignore test files
+test-*
+*-test
+__pycache__/
+*.pyc
