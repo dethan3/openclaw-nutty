@@ -2,7 +2,7 @@
 
 [![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-blue)](https://openclaw.ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/YOUR_USERNAME/openclaw-nutty?style=social)](https://github.com/YOUR_USERNAME/openclaw-nutty)
+[![GitHub Stars](https://img.shields.io/github/stars/dethan3/openclaw-nutty?style=social)](https://github.com/dethan3/openclaw-nutty)
 
 像松鼠 Nutty 一样收藏和整理知识的坚果小助手。自动保存链接、想法、项目、任务到飞书多维表格。
 
@@ -22,7 +22,7 @@
 1. 克隆本仓库到 OpenClaw 技能目录：
    ```bash
    cd ~/.openclaw/workspace/skills
-   git clone https://github.com/YOUR_USERNAME/openclaw-nutty.git nutty
+   git clone https://github.com/dethan3/openclaw-nutty.git nutty
    ```
 
 2. 重启 OpenClaw 或等待技能重新加载
