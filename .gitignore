@@ -30,6 +30,13 @@ Thumbs.db
 *~
 *.tmp
 
+# Ignore Node.js build and test output
+node_modules/
+dist/
+coverage/
+.pnpm-store/
+pnpm-debug.log*
+
 # Ignore test files
 test-*
 *-test
