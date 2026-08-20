@@ -118,4 +118,13 @@ describe("FeishuLarkCliClient", () => {
       code: "DESTINATION_UNAVAILABLE",
     });
   });
+
+  it("does not misclassify an ordinary non-zero exit as a timeout", async () => {
+    const runner = new LarkCliProcessRunner({ binary: process.execPath });
+    await expect(
+      runner.run(["--eval", "process.stderr.write('ordinary failure'); process.exit(1)"]),
+    ).rejects.toMatchObject({
+      code: "DESTINATION_UNAVAILABLE",
+    });
+  });
 });

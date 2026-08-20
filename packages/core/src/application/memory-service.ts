@@ -59,6 +59,22 @@ function withoutNulls<T extends Record<string, unknown>>(value: T): Record<strin
   );
 }
 
+const DESTINATION_LIMITED_FIELDS = [
+  ["content", "Content"],
+  ["userPrompt", "User Prompt"],
+  ["assistantResponse", "Assistant Response"],
+] as const;
+
+type DestinationLimitedContent = {
+  content: string;
+  userPrompt?: string | undefined;
+  assistantResponse?: string | undefined;
+};
+
+function characterCount(value: string): number {
+  return Array.from(value).length;
+}
+
 export class MemoryService {
   private readonly storage: StoragePort;
   private readonly defaultDestinationId: string;
@@ -79,6 +95,7 @@ export class MemoryService {
   async save(principal: Principal, rawInput: SaveMemoryInput): Promise<SaveMemoryOutput> {
     const input = saveMemoryInputSchema.parse(rawInput);
     const scope = this.scope(principal, input.destinationId);
+    await this.assertDestinationContentLimit(scope, input);
     const contentHash = hashMemoryContent(input.content);
     const now = this.now();
     const sensitiveContent = [
@@ -204,6 +221,7 @@ export class MemoryService {
       contentHash: hashMemoryContent(nextContent),
       updatedAt: this.now().toISOString(),
     });
+    await this.assertDestinationContentLimit(scope, updated);
     const stored = await this.storage.update(scope, input.id, updated, input.expectedVersion);
     return updateMemoryOutputSchema.parse({ memory: stored.memory });
   }
@@ -219,6 +237,34 @@ export class MemoryService {
 
   private scope(principal: Principal, destinationId: string | undefined): StorageScope {
     return { principal, destinationId: destinationId ?? this.defaultDestinationId };
+  }
+
+  private async assertDestinationContentLimit(
+    scope: StorageScope,
+    value: DestinationLimitedContent,
+  ): Promise<void> {
+    const { maxContentCharacters } = await this.storage.capabilities(scope);
+    if (maxContentCharacters === undefined) return;
+
+    for (const [field, label] of DESTINATION_LIMITED_FIELDS) {
+      const content = value[field];
+      if (content === undefined) continue;
+      const characters = characterCount(content);
+      if (characters <= maxContentCharacters) continue;
+      throw new NuttyError(
+        "CONTENT_TOO_LARGE",
+        `${label} contains ${characters} characters, but the destination allows at most ${maxContentCharacters}.`,
+        {
+          recoveryAction: "reduce_content",
+          details: {
+            field,
+            characterCount: String(characters),
+            maxContentCharacters: String(maxContentCharacters),
+            destinationId: scope.destinationId,
+          },
+        },
+      );
+    }
   }
 
   private idempotencyKey(scope: StorageScope, memory: Memory): string {

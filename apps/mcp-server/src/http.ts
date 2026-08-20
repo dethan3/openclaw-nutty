@@ -68,8 +68,7 @@ export function createNuttyHttpApp(options: HttpAppOptions): Express {
   app.post("/mcp", async (request, response) => {
     const principal = response.locals.principal as Principal;
     const server = createNuttyMcpServer({
-      service: options.service,
-      principal,
+      context: async () => ({ service: options.service, principal }),
       logger: options.logger,
       metrics: options.metrics,
     });

@@ -14,7 +14,25 @@ lark-cli auth status --json --verify
 
 默认使用 `--as user`。用户身份必须同时具备飞书应用后台 scope 和当前用户授权，并能访问目标多维表格。
 
-## 配置
+## 本地入口
+
+### Nutty 插件（推荐）
+
+Codex / ChatGPT Desktop 插件通过 stdio 启动自包含 MCP，不读取仓库内的 `.env.local`。首次使用时，Skill 会要求用户提供目标飞书多维表格的完整 URL，并调用 `configure_nutty`。目标信息写入：
+
+```text
+${XDG_CONFIG_HOME:-~/.config}/nutty/config.json
+```
+
+该文件只包含 Base token、table ID、目标名称和 lark-cli 运行选项，不包含 App Secret、用户 access token 或 refresh token；权限设为 `0600`。认证材料继续由 lark-cli keychain 管理。
+
+可用 `NUTTY_CONFIG_PATH` 覆盖配置文件位置，主要用于测试和隔离环境。
+
+### 独立 HTTP 服务
+
+独立运行 `apps/mcp-server` 时仍使用 `.env.local`，因为它还需要 HTTP 监听地址、Personal Profile bearer token 和确认签名密钥。这些属于 HTTP 部署配置，不是插件本地模式的前置条件。
+
+## 独立 HTTP 服务配置
 
 在 `apps/mcp-server/.env.local` 中配置：
 
@@ -37,7 +55,7 @@ FEISHU_LARK_CLI_TIMEOUT_MS=30000
 
 `lark-cli` 是默认 transport，因此可以省略 `FEISHU_TRANSPORT`。本模式不读取 `FEISHU_APP_ID`、`FEISHU_APP_SECRET` 或 `FEISHU_API_BASE_URL`。
 
-## 启动
+## 独立 HTTP 服务启动
 
 ```bash
 pnpm run build

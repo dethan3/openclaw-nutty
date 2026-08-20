@@ -43,7 +43,11 @@ function dependencies() {
 describe("Nutty MCP server", () => {
   it("advertises five annotated tools and completes a save/search flow", async () => {
     const { service, metrics } = dependencies();
-    const server = createNuttyMcpServer({ service, principal, logger, metrics });
+    const server = createNuttyMcpServer({
+      context: async () => ({ service, principal }),
+      logger,
+      metrics,
+    });
     const client = new Client({ name: "nutty-test", version: "1.0.0" });
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
     await Promise.all([

@@ -1,0 +1,29 @@
+{
+  "name": "nutty",
+  "version": "0.1.0",
+  "description": "Save and recall user-selected AI conversation memories in Feishu.",
+  "author": {
+    "name": "dethan3",
+    "url": "https://github.com/dethan3"
+  },
+  "homepage": "https://github.com/dethan3/openclaw-nutty",
+  "repository": "https://github.com/dethan3/openclaw-nutty",
+  "license": "MIT",
+  "keywords": ["memory", "feishu", "mcp", "codex", "chatgpt"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Nutty",
+    "shortDescription": "Save selected AI conversation memories to Feishu",
+    "longDescription": "Nutty gives ChatGPT and Codex a user-controlled memory workflow. Save the previous answer, the current exchange, or a selected passage to Feishu, then search and recall it later.",
+    "developerName": "dethan3",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/dethan3/openclaw-nutty",
+    "defaultPrompt": [
+      "Use Nutty to save the previous answer.",
+      "Search my Nutty memories for this project.",
+      "Check whether Nutty is connected to Feishu."
+    ]
+  },
+  "mcpServers": "./.mcp.json"
+}

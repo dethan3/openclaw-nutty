@@ -29,9 +29,13 @@ type ToolResult = {
   isError?: boolean;
 };
 
-type ToolDependencies = {
+export type NuttyToolContext = {
   service: MemoryService;
   principal: Principal;
+};
+
+type ToolDependencies = {
+  context: () => Promise<NuttyToolContext>;
   logger: Logger;
   metrics: Metrics;
 };
@@ -113,7 +117,10 @@ export function createNuttyMcpServer(dependencies: ToolDependencies): McpServer 
       runTool(
         "save_memory",
         dependencies,
-        () => dependencies.service.save(dependencies.principal, input),
+        async () => {
+          const context = await dependencies.context();
+          return context.service.save(context.principal, input);
+        },
         (output) =>
           output.outcome === "existing" ? "This memory already exists." : "Memory saved.",
       ),
@@ -132,7 +139,10 @@ export function createNuttyMcpServer(dependencies: ToolDependencies): McpServer 
       runTool(
         "search_memories",
         dependencies,
-        () => dependencies.service.search(dependencies.principal, input),
+        async () => {
+          const context = await dependencies.context();
+          return context.service.search(context.principal, input);
+        },
         (output) => `Found ${output.items.length} memories.`,
       ),
   );
@@ -150,7 +160,10 @@ export function createNuttyMcpServer(dependencies: ToolDependencies): McpServer 
       runTool(
         "get_memory",
         dependencies,
-        () => dependencies.service.get(dependencies.principal, input),
+        async () => {
+          const context = await dependencies.context();
+          return context.service.get(context.principal, input);
+        },
         () => "Memory loaded.",
       ),
   );
@@ -169,7 +182,10 @@ export function createNuttyMcpServer(dependencies: ToolDependencies): McpServer 
       runTool(
         "update_memory",
         dependencies,
-        () => dependencies.service.update(dependencies.principal, input),
+        async () => {
+          const context = await dependencies.context();
+          return context.service.update(context.principal, input);
+        },
         () => "Memory updated.",
       ),
   );
@@ -187,7 +203,10 @@ export function createNuttyMcpServer(dependencies: ToolDependencies): McpServer 
       runTool(
         "list_destinations",
         dependencies,
-        () => dependencies.service.listDestinations(dependencies.principal),
+        async () => {
+          const context = await dependencies.context();
+          return context.service.listDestinations(context.principal);
+        },
         (output) => `Found ${output.destinations.length} destinations.`,
       ),
   );

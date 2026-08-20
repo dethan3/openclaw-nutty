@@ -146,6 +146,7 @@ describe("FeishuStorageAdapter", () => {
 
     const destination = await adapter.destination(scope);
     expect(destination.status).toBe("ready");
+    expect(destination.capabilities.maxContentCharacters).toBe(100_000);
 
     const created = await adapter.create(scope, memory, { idempotencyKey: "save-1" });
     expect(created.memory.externalRefs[0]?.externalId).toBe("record-1");

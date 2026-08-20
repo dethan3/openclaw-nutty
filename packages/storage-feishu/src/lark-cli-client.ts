@@ -134,7 +134,7 @@ function throwCliFailure(result: ExecutionResult): never {
       recoveryAction: "authenticate",
     });
   }
-  if (result.error?.killed || result.error?.signal !== undefined) {
+  if (result.error?.killed === true || result.error?.signal != null) {
     throw new NuttyError("PROVIDER_TIMEOUT", "lark-cli did not respond in time.", {
       retryable: true,
       recoveryAction: "retry",

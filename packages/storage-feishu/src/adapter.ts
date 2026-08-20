@@ -37,6 +37,8 @@ const DEFAULT_LEGACY_ROUTES: Record<MemoryType, LegacyTableName> = {
   inbox: "Inbox",
 };
 
+export const FEISHU_TEXT_FIELD_CHARACTER_LIMIT = 100_000;
+
 const cursorSchema = z.object({ tableIndex: z.number().int().nonnegative(), pageToken: z.string().optional() });
 type Cursor = z.infer<typeof cursorSchema>;
 
@@ -145,6 +147,7 @@ export class FeishuStorageAdapter implements StoragePort {
       structuredFilters: true,
       optimisticConcurrency: false,
       softDelete: false,
+      maxContentCharacters: FEISHU_TEXT_FIELD_CHARACTER_LIMIT,
     };
   }
 

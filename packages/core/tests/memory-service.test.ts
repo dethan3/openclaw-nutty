@@ -16,10 +16,17 @@ const destination = {
   },
 };
 
-function createService(): MemoryService {
+function createService(maxContentCharacters?: number): MemoryService {
+  const configuredDestination = {
+    ...destination,
+    capabilities: {
+      ...destination.capabilities,
+      ...(maxContentCharacters === undefined ? {} : { maxContentCharacters }),
+    },
+  };
   return new MemoryService({
-    storage: new InMemoryStorage(destination),
-    defaultDestinationId: destination.id,
+    storage: new InMemoryStorage(configuredDestination),
+    defaultDestinationId: configuredDestination.id,
     confirmationSecret: "test-confirmation-secret-that-is-long-enough",
     now: () => new Date("2026-08-19T02:00:00.000Z"),
     createId: () => "123e4567-e89b-42d3-a456-426614174000",
@@ -96,5 +103,44 @@ describe("MemoryService", () => {
     await expect(
       service.save({ id: "other-user" }, { ...sensitiveInput, sensitiveConfirmationToken: token }),
     ).rejects.toMatchObject({ code: "SENSITIVE_CONTENT_CONFIRMATION_REQUIRED" });
+  });
+
+  it("enforces the destination limit for every conversation content field", async () => {
+    const service = createService(10);
+
+    await expect(
+      service.save(principal, { ...input, content: "12345678901" }),
+    ).rejects.toMatchObject({
+      code: "CONTENT_TOO_LARGE",
+      recoveryAction: "reduce_content",
+      details: {
+        field: "content",
+        characterCount: "11",
+        maxContentCharacters: "10",
+      },
+    });
+
+    await expect(
+      service.save(principal, {
+        ...input,
+        content: "short",
+        userPrompt: "12345678901",
+      }),
+    ).rejects.toMatchObject({
+      code: "CONTENT_TOO_LARGE",
+      details: { field: "userPrompt" },
+    });
+
+    const created = await service.save(principal, { ...input, content: "1234567890" });
+    await expect(
+      service.update(principal, {
+        id: created.memory.id,
+        patch: { assistantResponse: "12345678901" },
+        replaceOriginal: true,
+      }),
+    ).rejects.toMatchObject({
+      code: "CONTENT_TOO_LARGE",
+      details: { field: "assistantResponse" },
+    });
   });
 });

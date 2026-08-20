@@ -10,13 +10,17 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "build": "pnpm -r --if-present build",
+    "build": "pnpm -r --if-present build && pnpm run build:plugin",
+    "build:plugin": "node scripts/build-openai-plugin.mjs",
     "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm run build && pnpm -r --if-present test",
-    "check": "pnpm run build && pnpm run typecheck && pnpm -r --if-present test"
+    "test:unit": "pnpm -r --if-present test",
+    "test:plugin": "bash scripts/smoke-openai-plugin.sh",
+    "test": "pnpm run build && pnpm run test:unit && pnpm run test:plugin",
+    "check": "pnpm run build && pnpm run typecheck && pnpm run test:unit && pnpm run test:plugin"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
+    "esbuild": "^0.28.2",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   }

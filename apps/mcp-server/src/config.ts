@@ -45,7 +45,7 @@ export type ServerConfig = {
   allowedHosts?: string[];
   personalToken: string;
   principalId: string;
-  confirmationSecret: string;
+  confirmationSecret?: string;
   destinationId: string;
   feishu: FeishuCommonConfig &
     (
