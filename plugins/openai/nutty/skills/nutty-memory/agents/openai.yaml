@@ -1,0 +1,6 @@
+interface:
+  display_name: "Nutty Memory"
+  short_description: "Save and recall selected AI conversation memories"
+  default_prompt: "Use $nutty-memory to save the previous assistant response."
+policy:
+  allow_implicit_invocation: true

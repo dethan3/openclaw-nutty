@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "nutty": {
+      "cwd": ".",
+      "command": "node",
+      "args": [
+        "./mcp/server.mjs"
+      ]
+    }
+  }
+}

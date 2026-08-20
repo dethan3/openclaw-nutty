@@ -1,118 +1,502 @@
-# 🐿️ Nutty - 松鼠知识坚果收藏助手
+# Nutty
 
-[![OpenClaw Skill](https://img.shields.io/badge/OpenClaw-Skill-blue)](https://openclaw.ai)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![GitHub Stars](https://img.shields.io/github/stars/dethan3/openclaw-nutty?style=social)](https://github.com/dethan3/openclaw-nutty)
+> User-controlled, cross-platform memory for AI conversations. Save only the answers, exchanges, and passages you choose, store them in Feishu Base, and recall them in a later conversation.
 
-像松鼠 Nutty 一样收藏和整理知识的坚果小助手。自动保存链接、想法、项目、任务到飞书多维表格。
+[简体中文](README.zh-CN.md) · [Product Design](docs/DESIGN.md) · [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)
 
-## ✨ 特性
+Nutty is currently a **functional MVP / developer preview**. The Codex Skill, local MCP server, Feishu adapter, deduplication, search, recall, and update flow are implemented and have passed a real Feishu end-to-end test. Public distribution through the ChatGPT/Codex plugin directory is not finished yet.
 
-- 🐿️ **可爱松鼠主题** - 使用松鼠收藏坚果的比喻，回复充满趣味
-- 🔗 **智能路由** - 自动识别内容类型并保存到对应表格
-- 🏷️ **自动标签提取** - 从消息中提取 `#标签` 和 `@项目`
-- 📊 **飞书集成** - 无缝对接飞书多维表格
-- 🎯 **简单易用** - 自然语言输入，无需复杂命令
-- 💾 **原始保存** - 优先保存而非分析，保留完整上下文
+## What is Nutty?
 
-## 🚀 快速开始
+AI conversations produce valuable answers, decisions, preferences, and project context every day, but that knowledge usually remains scattered across chat histories. Nutty turns the content **you explicitly select** into an independent, searchable, and portable memory store.
 
-### 安装
+You can say:
 
-1. 克隆本仓库到 OpenClaw 技能目录：
-   ```bash
-   cd ~/.openclaw/workspace/skills
-   git clone https://github.com/dethan3/openclaw-nutty.git nutty
-   ```
-
-2. 重启 OpenClaw 或等待技能重新加载
-
-### 配置
-
-1. 在飞书中创建名为 "Collector_Base" 的多维表格应用
-2. 创建以下数据表：Links, Ideas, Projects, Tasks, Inbox
-3. 确保 OpenClaw 已配置飞书 API 权限
-
-### 使用示例
-
-```
-# 保存链接
-https://github.com/openai/openai-python #AI #API
-
-# 记录想法
-idea: 做一个自动整理笔记的AI工具 #AI #工具
-
-# 创建项目
-project: AI学习助手
-目标：开发个性化学习推荐系统
-
-# 添加任务
-todo: 明天上午10点开会讨论项目计划 #会议
+```text
+Nutty, save the previous answer.
+Nutty, save this exchange as an architecture decision for openclaw-nutty.
+Nutty, find the MCP authentication plan I saved earlier.
+Nutty, change the last memory's tags to mcp and security.
 ```
 
-## 📋 功能详情
+Nutty does not record every conversation by default. It does not save system prompts, hidden reasoning, tool traces, or authentication data.
 
-### 链接收藏 (Links)
-- 自动识别 URL 并保存
-- 支持 GitHub、YouTube、arXiv 等网站类型识别
-- 提取标签和关联项目
-- 清理 URL 跟踪参数
+## MVP status
 
-### 想法记录 (Ideas)
-- 以 `idea:`、`灵感:` 开头的消息
-- 保存原始想法内容
-- 自动分类和标签
+| Capability | Status |
+|---|---|
+| Unified memory model, validation, content hashing, and deduplication | ✅ Complete |
+| Capture previous answer, current exchange, selection, or manual content | ✅ Complete |
+| Search, full recall, and updates | ✅ Complete |
+| Feishu Base storage adapter | ✅ Complete |
+| Local `lark-cli` keychain authentication without storing App Secret | ✅ Complete |
+| Codex Skill and self-contained stdio MCP bundle | ✅ Complete |
+| Standalone Streamable HTTP MCP server | ✅ Complete |
+| Real Feishu create, deduplicate, search, and recall test | ✅ Passed |
+| Public ChatGPT/Codex plugin directory release | ⏳ Pending |
+| ChatGPT Web remote OAuth/HTTPS deployment | ⏳ Later phase |
+| OpenClaw MCP adapter and DeepSeek Harness plugin | ⏳ Later phase |
+| Notion, Google Workspace, and local storage | ⏳ Later phase |
 
-### 项目管理 (Projects)
-- 以 `project:`、`项目:` 开头的消息
-- 记录项目目标、描述、下一步行动
+## How it works
 
-### 任务管理 (Tasks)
-- 以 `todo:`、`task:`、`待办:` 开头的消息
-- 支持截止时间（如明确指定）
+```text
+User explicitly selects content
+        │
+        ▼
+Codex Skill: resolves the content and capture mode
+        │
+        ▼
+Nutty MCP: validates, deduplicates, searches, and updates
+        │
+        ▼
+Nutty Core: applies the shared memory model and privacy policy
+        │
+        ▼
+Feishu adapter → lark-cli keychain → Feishu Base
+```
 
-### 收件箱 (Inbox)
-- 不确定的内容自动保存到这里
-- 后续手动整理
+Local Codex uses `stdio + lark-cli`. The Skill decides what “the previous answer” means from visible conversation context. MCP tools control external writes. Core keeps the data and safety rules consistent.
 
-## 🛠️ 技术细节
+## Quick start: from source to your first saved memory
 
-### 路由规则
-- **链接**: 包含 `http://` 或 `https://`
-- **想法**: 以 `idea:`、`thought:`、`灵感:` 开头
-- **项目**: 以 `project:`、`项目:` 开头
-- **任务**: 以 `todo:`、`task:`、`待办:` 开头
-- **其他**: 保存到 Inbox
+Nutty is not yet published in the public plugin directory. The current recommended path is a **source installation** that installs the same Nutty Skill and registers the self-contained MCP bundle with Codex.
 
-### 字段映射
-详细字段配置请参考 [SKILL.md](SKILL.md)。
+### 1. Prerequisites
 
-## 📖 完整文档
+- Git
+- Node.js `>= 24`
+- pnpm `>= 10`
+- A working Codex CLI installation
+- A Feishu Base table you can read and edit
 
-查看 [SKILL.md](SKILL.md) 了解完整的功能说明、路由规则和配置指南。
+Check versions:
 
-## 🤝 贡献
+```bash
+node --version
+pnpm --version
+codex --version
+```
 
-欢迎贡献！请参考 [CONTRIBUTING.md](CONTRIBUTING.md)。
+If Node.js is installed but pnpm is not:
 
-1. Fork 本仓库
-2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
-3. 提交更改 (`git commit -m 'Add some amazing feature'`)
-4. 推送到分支 (`git push origin feature/amazing-feature`)
-5. 开启 Pull Request
+```bash
+corepack enable
+corepack prepare pnpm@10.23.0 --activate
+```
 
-## 📄 许可证
+### 2. Clone, install, and build
 
-本项目基于 [MIT 许可证](LICENSE) 开源。
+```bash
+git clone https://github.com/dethan3/openclaw-nutty.git
+cd openclaw-nutty
+pnpm install --frozen-lockfile
+pnpm run check
+```
 
-## 🙏 致谢
+`pnpm run check` builds every workspace, runs TypeScript checks, unit tests, and the plugin protocol smoke test. The generated self-contained MCP bundle is:
 
-感谢所有为这个项目做出贡献的人！
+```text
+plugins/openai/nutty/mcp/server.mjs
+```
 
-## 🐿️ 关于 Nutty
+### 3. Install and authenticate lark-cli
 
-Nutty 是一只可爱的松鼠助手，它喜欢收藏和整理你的知识坚果。就像松鼠为冬天收藏坚果一样，Nutty 帮你为未来收藏有价值的知识。
+Nutty's local mode uses the current operating-system user's `lark-cli` keychain. Nutty does not need to read or store `FEISHU_APP_SECRET`.
 
----
+```bash
+npm install -g @larksuite/cli
+lark-cli --version
+lark-cli config init --new
+lark-cli auth login --domain base
+lark-cli auth status --json --verify
+```
 
-**让知识管理变得有趣！** 🥜
+Notes:
+
+- `config init --new` guides you through creating or configuring a Feishu application.
+- `auth login --domain base` requests only the Base business-domain permissions.
+- If the CLI returns missing scopes and a developer-console URL, enable those scopes for the app, then authorize again.
+- Nutty defaults to `--as user`; the authenticated user must also be a collaborator on the target Base.
+- Upgrade later with `lark-cli update`.
+
+### 4. Create the Feishu Base schema
+
+Create one Base and one table. Field names are case-sensitive. Keep the English names below unchanged.
+
+The minimum working schema has four required text fields:
+
+| Field | Feishu type | Purpose |
+|---|---|---|
+| `Nutty ID` | Text | Stable Nutty UUID |
+| `Title` | Text; may be the primary field | Memory title |
+| `Content` | Text | Original user-selected content |
+| `Content Hash` | Text | SHA-256 deduplication fingerprint |
+
+For the complete experience, create all fields below:
+
+| Field | Recommended type | Accepted type | Purpose |
+|---|---|---|---|
+| `Nutty ID` | Text | Text | Required |
+| `Title` | Text | Text | Required; may be primary |
+| `Content` | Text | Text | Required |
+| `Content Hash` | Text | Text | Required |
+| `User Prompt` | Text | Text | User side of an exchange |
+| `Assistant Response` | Text | Text | Assistant side of an exchange |
+| `User Note` | Text | Text | User annotation |
+| `Summary` | Text | Text | Derived summary |
+| `Type` | Text | Text or single select | Memory type |
+| `Tags` | Text | Text or multiple select | Tags; text allows arbitrary new tags |
+| `Project` | Text | Text or single select | Project name |
+| `Capture Mode` | Text | Text or single select | Capture method |
+| `Source` | Text | Text or single select | Source surface |
+| `Source Details` | Text | Text | Source JSON |
+| `Sensitivity` | Text | Text or single select | Sensitivity level |
+| `Schema Version` | Number | Text or number | Currently `1` |
+| `Created At` | Date/time | Text or date/time | Creation time |
+| `Updated At` | Date/time | Text or date/time | Last update time |
+
+If you use select fields, create every value Nutty may write:
+
+- `Type`: `conversation`, `decision`, `insight`, `reference`, `task`, `project`, `preference`, `inbox`
+- `Capture Mode`: `previous_answer`, `current_exchange`, `selection`, `manual`
+- `Source`: `chatgpt`, `codex`, `openclaw`, `deepseek-harness`, `other`
+- `Sensitivity`: `normal`, `private`, `restricted`
+
+Use a text field for `Tags` if you want the model to create new tags freely. Feishu rejects unknown options in a multiple-select field.
+
+Copy the table's **full URL**, including its `table` parameter:
+
+```text
+https://your-tenant.feishu.cn/base/<base_token>?table=<table_id>
+```
+
+### 5. Register Nutty with Codex
+
+Run from the repository root:
+
+```bash
+export NUTTY_REPO="$(pwd)"
+export NUTTY_CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+
+mkdir -p "$NUTTY_CODEX_HOME/skills"
+ln -s "$NUTTY_REPO/plugins/openai/nutty/skills/nutty-memory" \
+  "$NUTTY_CODEX_HOME/skills/nutty-memory"
+
+codex mcp add nutty -- node "$NUTTY_REPO/plugins/openai/nutty/mcp/server.mjs"
+codex mcp list
+```
+
+This source-development installation keeps the Skill linked to the repository, while MCP points to the generated bundle.
+
+After installation, **restart Codex or open a new session**. A session that was already running will not automatically load a newly installed Skill.
+
+### 6. Connect Nutty to Feishu
+
+In a new Codex conversation, say:
+
+```text
+Use Nutty to check its status. If it is not configured, use this full URL as the destination:
+https://your-tenant.feishu.cn/base/<base_token>?table=<table_id>
+```
+
+Nutty calls `configure_nutty`, validates access and schema, and writes non-secret destination metadata to:
+
+```text
+${XDG_CONFIG_HOME:-~/.config}/nutty/config.json
+```
+
+The file mode is `0600`. It contains the Base token, table ID, and local runtime options only. User access tokens, refresh tokens, and App Secret stay in the `lark-cli` keychain.
+
+### 7. Save and recall your first memory
+
+```text
+Nutty, save the previous answer.
+```
+
+Then search for it:
+
+```text
+Nutty, search for the memory I just saved.
+```
+
+On success, Nutty returns the title and Feishu record link. Saving the same normalized content again returns `existing` instead of creating a duplicate.
+
+## Everyday usage
+
+### Save the previous answer
+
+```text
+Nutty, save the previous answer as an insight for the openclaw-nutty project.
+```
+
+Nutty uses `captureMode: previous_answer` and saves only the immediately preceding user-visible assistant response.
+
+### Save the current exchange
+
+```text
+Nutty, save this exchange as an architecture decision.
+```
+
+Nutty uses `captureMode: current_exchange` and preserves both the user prompt and assistant response.
+
+### Save a specific passage
+
+```text
+Nutty, save only this passage:
+“The platform adapter decides which conversation content to save; Core decides how to save it safely and consistently.”
+```
+
+### Search and recall
+
+```text
+Nutty, search the openclaw-nutty project for memories about MCP authentication.
+Nutty, open the most relevant result and summarize it for me.
+```
+
+The Skill searches first, then fetches a full memory only after identifying the relevant result.
+
+### Update a memory
+
+```text
+Nutty, rename that memory to “Nutty MCP authentication decision” and set its tags to mcp and security.
+```
+
+Title, summary, type, tags, project, and sensitivity can be updated directly. Replacing original content requires explicit user confirmation and `replaceOriginal: true`.
+
+## MCP tool reference
+
+| Tool | Purpose | Writes data? |
+|---|---|---|
+| `get_nutty_status` | Check local configuration and Feishu health | No |
+| `configure_nutty` | Configure a destination from a full Base URL | Local config only |
+| `save_memory` | Save a memory and deduplicate normalized content | Yes |
+| `search_memories` | Filter by text, type, tags, project, source, and time | No |
+| `get_memory` | Read a complete memory by Nutty UUID | No |
+| `update_memory` | Update derived fields or replace original content after confirmation | Yes |
+| `list_destinations` | List configured storage and capabilities | No |
+
+The MVP does not expose a delete tool. Delete records directly in Feishu for now. A future release will add deletion with an explicit confirmation gate.
+
+## Data reference
+
+Memory types:
+
+```text
+conversation | decision | insight | reference |
+task | project | preference | inbox
+```
+
+Capture modes:
+
+```text
+previous_answer | current_exchange | selection | manual
+```
+
+Source surfaces:
+
+```text
+chatgpt | codex | openclaw | deepseek-harness | other
+```
+
+Privacy and sensitive content:
+
+- Nutty saves only user-selected, user-visible content.
+- It excludes system/developer prompts, hidden reasoning, tool traces, credentials, and identity metadata.
+- Content matching private keys, API keys, access tokens, client secrets, or password patterns requires a second confirmation.
+- Sensitive confirmation tokens bind the user, destination, and content hash, and expire after five minutes.
+- Content length is checked against the selected destination before every write. Feishu text cells allow up to 100,000 characters; titles remain limited to 240, summaries to 2,000, and tags to 20 per memory.
+
+## Standalone HTTP MCP server
+
+Local plugin mode does not require `.env.local`. The standalone HTTP server does:
+
+```bash
+cp apps/mcp-server/.env.example apps/mcp-server/.env.local
+```
+
+Edit `apps/mcp-server/.env.local`:
+
+```dotenv
+NUTTY_HOST=127.0.0.1
+NUTTY_PORT=3000
+NUTTY_ALLOWED_HOSTS=localhost,127.0.0.1
+NUTTY_PERSONAL_TOKEN=<random value of at least 32 characters>
+NUTTY_PRINCIPAL_ID=personal
+NUTTY_CONFIRMATION_SECRET=<random value of at least 32 characters>
+NUTTY_DESTINATION_ID=feishu-default
+
+FEISHU_TRANSPORT=lark-cli
+FEISHU_APP_TOKEN=<base_token>
+FEISHU_TABLE_ID=<table_id>
+FEISHU_WEB_BASE_URL=https://your-tenant.feishu.cn/base
+FEISHU_LARK_CLI_BINARY=lark-cli
+FEISHU_LARK_CLI_IDENTITY=user
+FEISHU_LARK_CLI_TIMEOUT_MS=30000
+```
+
+Generate random values with:
+
+```bash
+openssl rand -hex 32
+```
+
+Start the server:
+
+```bash
+pnpm run build
+pnpm --filter @nutty/mcp-server start
+```
+
+Check process and storage health:
+
+```bash
+curl http://127.0.0.1:3000/health
+curl -H "Authorization: Bearer <NUTTY_PERSONAL_TOKEN>" \
+  http://127.0.0.1:3000/health/storage
+```
+
+HTTP endpoints:
+
+| Path | Authentication | Purpose |
+|---|---|---|
+| `GET /health` | None | Process health |
+| `GET /health/storage` | Bearer token | Feishu storage health |
+| `GET /metrics` | Bearer token | MCP invocation metrics |
+| `POST /mcp` | Bearer token | Streamable HTTP MCP |
+
+The current HTTP profile is a single-user personal profile. Do not expose it directly to the public internet. A production ChatGPT Web deployment still needs HTTPS, standard user authorization, and remote deployment hardening.
+
+### OpenAPI transport
+
+For server environments that cannot use a local keychain:
+
+```dotenv
+FEISHU_TRANSPORT=openapi
+FEISHU_APP_ID=<app_id>
+FEISHU_APP_SECRET=<app_secret>
+FEISHU_API_BASE_URL=https://open.feishu.cn/open-apis
+```
+
+Only `openapi` mode requires App ID and App Secret. Local Codex should normally use `lark-cli`.
+
+## Development commands
+
+```bash
+pnpm run build          # Build all workspaces and the plugin bundle
+pnpm run typecheck      # Run TypeScript type checking
+pnpm run test:unit      # Test Core, Feishu adapter, and MCP server
+pnpm run test:plugin    # Smoke-test the self-contained stdio plugin
+pnpm run check          # Run the complete quality gate
+pnpm run build:plugin   # Regenerate only mcp/server.mjs
+```
+
+The project requires Node.js `>=24.0.0` and pnpm `>=10.0.0`.
+
+## Update and uninstall
+
+Update a source installation:
+
+```bash
+git pull --ff-only
+pnpm install --frozen-lockfile
+pnpm run check
+```
+
+The Skill is symlinked and MCP points to the repository bundle, so no registration change is needed. Restart Codex to load the new version.
+
+Uninstall:
+
+```bash
+codex mcp remove nutty
+unlink "${CODEX_HOME:-$HOME/.codex}/skills/nutty-memory"
+```
+
+Uninstalling does not remove memories from Feishu or automatically remove local destination metadata. Remove `${XDG_CONFIG_HOME:-~/.config}/nutty/config.json` yourself if you also want to clear the local configuration.
+
+## Troubleshooting
+
+### Codex cannot find the Nutty Skill
+
+- Confirm `${CODEX_HOME:-~/.codex}/skills/nutty-memory/SKILL.md` exists.
+- Run `codex mcp list` and confirm `nutty` is registered.
+- Restart Codex or open a new session after installation.
+
+### `DESTINATION_NOT_FOUND`
+
+No destination is configured. Give Nutty the full Feishu Base URL containing `?table=<table_id>` so it can call `configure_nutty`.
+
+### `AUTH_REQUIRED` or `FORBIDDEN`
+
+```bash
+lark-cli auth status --json --verify
+lark-cli auth login --domain base
+```
+
+Also confirm that:
+
+- The Feishu app has every scope named in the error.
+- The current user completed authorization.
+- The current user can access the target Base and table.
+
+### `SCHEMA_MISMATCH`
+
+Confirm the four required text fields exist with exact names: `Nutty ID`, `Title`, `Content`, and `Content Hash`.
+
+### Status is `degraded`
+
+The four required fields let Nutty work, but missing optional fields cause some metadata to be skipped. Add the fields from the full schema table to restore the complete experience.
+
+### A new type or tag fails to save
+
+Single-select and multiple-select fields only accept options that already exist. Prefer text fields for `Type`, `Tags`, `Project`, `Capture Mode`, `Source`, and `Sensitivity`, or pre-create every option you plan to use.
+
+### Saving again returns `existing`
+
+This is the expected deduplication result. Nutty calculates SHA-256 over normalized content and does not create another record for the same body.
+
+### lark-cli version problems
+
+```bash
+lark-cli update
+lark-cli --version
+```
+
+## Repository layout
+
+```text
+openclaw-nutty/
+├── packages/core/                 # Model, use cases, privacy, dedupe, storage port
+├── packages/storage-feishu/       # Feishu OpenAPI and lark-cli adapter
+├── apps/mcp-server/               # stdio and Streamable HTTP MCP
+├── plugins/openai/nutty/          # Codex Skill, manifest, self-contained MCP
+├── plugins/openclaw/              # Planned OpenClaw compatibility adapter
+├── plugins/deepseek-harness/      # Planned DeepSeek Harness thin plugin
+├── scripts/                       # Plugin build and smoke test
+└── docs/                          # Product, architecture, and runtime docs
+```
+
+## Design principles
+
+- **User choice first:** nothing enters long-term memory without an explicit request.
+- **Original content first:** title, summary, and tags never replace the source text.
+- **Thin platform adapters:** platforms resolve visible context; Core owns shared persistence rules.
+- **Save and recall together:** the MVP includes write, search, and full recall.
+- **User-owned storage:** Feishu is the current source of truth; Nutty does not keep a second body database.
+- **Minimal credentials:** local credentials stay in the `lark-cli` keychain.
+
+Read [Product Design](docs/DESIGN.md), [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md), [lark-cli Local Runtime](docs/LARK_CLI_LOCAL_RUNTIME.md), and [OpenAI Plugin](docs/OPENAI_PLUGIN.md) for more detail. OpenAI describes a plugin as a package containing Skills, an MCP server, optional UI, or a combination of those pieces. Nutty currently uses the Skill + MCP Server shape; see the official [Plugin architecture](https://developers.openai.com/plugins/concepts/plugins).
+
+## Current limitations and roadmap
+
+1. Publish Nutty in the shared ChatGPT/Codex plugin directory.
+2. Add HTTPS, standard OAuth, and multi-user remote MCP for ChatGPT Web.
+3. Complete the OpenClaw MCP compatibility adapter.
+4. Add the DeepSeek Harness thin plugin.
+5. Add Notion, Google Workspace, and local storage adapters.
+6. Add explicitly confirmed deletion and export.
+7. Evaluate full-text indexing and semantic recall from real usage data.
+
+## License
+
+[MIT](LICENSE)
